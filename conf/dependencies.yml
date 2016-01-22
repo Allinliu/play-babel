@@ -1,0 +1,4 @@
+self: play -> babel 0.1
+
+require:
+    - play
