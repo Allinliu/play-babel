@@ -11,26 +11,61 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * This plugin intercepts requests for static files ending in '.jsx', and
- * serves the compiled javascript instead.
- */
 public class BabelJsxPlugin extends PlayPlugin {
 
+	public static final String babelPath = Play.configuration.getProperty("babel.path", "");
 	public static final boolean precompiling = System.getProperty("precompile") != null;
 	public static final String tmpOrPrecompile = Play.usePrecompiled || precompiling ? "precompiled" : "tmp";
 	public static final File compiledDir = Play.getFile(tmpOrPrecompile +  "/components");
-	public static final File componentsDir = Play.getFile("/public/javascripts/components");
+	public static final File sourceDir = Play.getFile("/public/javascripts/components");
 
-	public static void compileAll() {
-		String babelFullpath = Play.configuration.getProperty("babel.path", "");
+	public static File getCompiledFile(File componentFile) {
+		return new File(compiledDir,
+			componentFile.getAbsolutePath()
+				.replace(sourceDir.getAbsolutePath(), "")
+				.replace(".jsx", ".js"));
+	}
+
+	public static File getCompiledFile(String moduleName, String componentName) {
+		return new File(compiledDir, moduleName + "/" + componentName + ".js");
+	}
+
+	public static File getSourceFile(String moduleName, String componentName) {
+		return new File(sourceDir, moduleName + "/" + componentName + ".jsx");
+	}
+
+	public static void compile(File sourceFile) {
+
 		List<String> command = new ArrayList<String>();
-		command.add(babelFullpath);
-		command.add("--presets");
-		command.add("react");
-		command.add(componentsDir.getAbsolutePath());
-		command.add("--out-dir");
-		command.add(compiledDir.getAbsolutePath());
+		if (sourceFile == null) {
+
+			if (!compiledDir.exists()) {
+				compiledDir.mkdirs();
+			}
+
+			command.add(babelPath);
+			command.add("--presets");
+			command.add("react");
+			command.add(sourceDir.getAbsolutePath());
+			command.add("--out-dir");
+			command.add(compiledDir.getAbsolutePath());
+		}
+		else {
+
+			File compiledFile = getCompiledFile(sourceFile);
+			Logger.info("-- %s", compiledFile.getAbsolutePath());
+
+			if (!compiledFile.getParentFile().exists()) {
+				compiledFile.getParentFile().mkdirs();
+			}
+
+			command.add(babelPath);
+			command.add("--presets");
+			command.add("react");
+			command.add(sourceFile.getAbsolutePath());
+			command.add("--out-file");
+			command.add(compiledFile.getAbsolutePath());
+		}
 
 		ProcessBuilder pb = new ProcessBuilder(command);
 		Process babelProcess = null;
@@ -49,8 +84,7 @@ public class BabelJsxPlugin extends PlayPlugin {
 				processErrors += line + "\n";
 			}
 			if (!processErrors.isEmpty()) {
-				Logger.error("%s", processErrors);
-				throw new RuntimeException("Babel compilation error");
+				throw new BabelCompilationException("Babel compilation error", processErrors);
 			}
 			minifyReader.close();
 
@@ -66,7 +100,7 @@ public class BabelJsxPlugin extends PlayPlugin {
 	@Override
 	public void onLoad() {
 		Logger.info("Compile all react jsx files...");
-		compileAll();
+		compile(null);
 		Logger.info("Done.");
 	}
 
