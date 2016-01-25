@@ -11,41 +11,35 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BabelJsxPlugin extends PlayPlugin {
+public class BabelJsPlugin extends PlayPlugin {
 
 	public static final String babelPath = Play.configuration.getProperty("babel.path", "");
 	public static final boolean precompiling = System.getProperty("precompile") != null;
 	public static final String tmpOrPrecompile = Play.usePrecompiled || precompiling ? "precompiled" : "tmp";
-	public static final File compiledDir = Play.getFile(tmpOrPrecompile + Play.configuration.getProperty("babel.jsx.compiled_directory_path", "/components"));
-	public static final File sourceDir = Play.getFile(Play.configuration.getProperty("babel.jsx.source_directory_path", "/public/javascripts/components"));
+	public static final File compiledDir = Play.getFile(tmpOrPrecompile + Play.configuration.getProperty("babel.js.compiled_directory_path", "/js-modules"));
+	public static final File sourceDir = Play.getFile(Play.configuration.getProperty("babel.js.source_directory_path", "/public/javascripts/modules"));
 
 	public static File getCompiledFile(File componentFile) {
-		return new File(compiledDir,
-			componentFile.getAbsolutePath()
-				.replace(sourceDir.getAbsolutePath(), "")
-				.replace(".jsx", ".js"));
+		return new File(compiledDir, componentFile.getAbsolutePath().replace(sourceDir.getAbsolutePath(), ""));
 	}
 
-	public static File getCompiledFile(String moduleName, String componentName) {
-		return new File(compiledDir, moduleName + "/" + componentName + ".js");
+	public static File getCompiledFile(String moduleName) {
+		return new File(compiledDir, moduleName + ".js");
 	}
 
-	public static File getSourceFile(String moduleName, String componentName) {
-		return new File(sourceDir, moduleName + "/" + componentName + ".jsx");
+	public static File getSourceFile(String moduleName) {
+		return new File(sourceDir, moduleName + ".js");
 	}
 
 	public static void compile(File sourceFile) {
 
+		if (!compiledDir.exists()) {
+			compiledDir.mkdirs();
+		}
+
 		List<String> command = new ArrayList<String>();
 		if (sourceFile == null) {
-
-			if (!compiledDir.exists()) {
-				compiledDir.mkdirs();
-			}
-
 			command.add(babelPath);
-			command.add("--presets");
-			command.add("react");
 			command.add(sourceDir.getAbsolutePath());
 			command.add("--out-dir");
 			command.add(compiledDir.getAbsolutePath());
@@ -53,14 +47,7 @@ public class BabelJsxPlugin extends PlayPlugin {
 		else {
 
 			File compiledFile = getCompiledFile(sourceFile);
-
-			if (!compiledFile.getParentFile().exists()) {
-				compiledFile.getParentFile().mkdirs();
-			}
-
 			command.add(babelPath);
-			command.add("--presets");
-			command.add("react");
 			command.add(sourceFile.getAbsolutePath());
 			command.add("--out-file");
 			command.add(compiledFile.getAbsolutePath());
