@@ -51,6 +51,8 @@ public class BabelJsPlugin extends PlayPlugin {
 		List<String> command = new ArrayList<String>();
 		if (sourceFile == null) {
 			command.add(babelPath);
+			command.add("--presets");
+			command.add("es2015");
 			command.add(sourceDir.getAbsolutePath());
 			command.add("--out-dir");
 			command.add(compiledDir.getAbsolutePath());
@@ -59,6 +61,8 @@ public class BabelJsPlugin extends PlayPlugin {
 
 			File compiledFile = getCompiledFile(sourceFile);
 			command.add(babelPath);
+			command.add("--presets");
+			command.add("es2015");
 			command.add(sourceFile.getAbsolutePath());
 			command.add("--out-file");
 			command.add(compiledFile.getAbsolutePath());

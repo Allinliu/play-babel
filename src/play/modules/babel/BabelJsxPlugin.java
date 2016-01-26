@@ -45,7 +45,7 @@ public class BabelJsxPlugin extends PlayPlugin {
 
 			command.add(babelPath);
 			command.add("--presets");
-			command.add("react");
+			command.add("es2015,react");
 			command.add(sourceDir.getAbsolutePath());
 			command.add("--out-dir");
 			command.add(compiledDir.getAbsolutePath());
@@ -60,7 +60,7 @@ public class BabelJsxPlugin extends PlayPlugin {
 
 			command.add(babelPath);
 			command.add("--presets");
-			command.add("react");
+			command.add("es2015,react");
 			command.add(sourceFile.getAbsolutePath());
 			command.add("--out-file");
 			command.add(compiledFile.getAbsolutePath());
