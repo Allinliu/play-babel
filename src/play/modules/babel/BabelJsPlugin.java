@@ -3,6 +3,7 @@ package play.modules.babel;
 import play.Logger;
 import play.Play;
 import play.PlayPlugin;
+import play.libs.IO;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -29,6 +30,16 @@ public class BabelJsPlugin extends PlayPlugin {
 
 	public static File getSourceFile(String moduleName) {
 		return new File(sourceDir, moduleName + ".js");
+	}
+
+	public static String compileModule(String moduleName) {
+		File compiledFile = BabelJsPlugin.getCompiledFile(moduleName);
+		File sourceFile = BabelJsPlugin.getSourceFile(moduleName);
+		if (sourceFile.lastModified() > compiledFile.lastModified()) {
+			compile(sourceFile);
+			return IO.readContentAsString(compiledFile);
+		}
+		return IO.readContentAsString(compiledFile);
 	}
 
 	public static void compile(File sourceFile) {
